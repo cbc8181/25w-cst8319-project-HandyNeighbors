@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, Alert, View } from 'react-native';
 import { router } from 'expo-router';
-import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { apiClient } from '@/services/api';
 import { AUTH_ENDPOINTS } from '@/config/api';
@@ -46,12 +45,12 @@ export default function SignInScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.header}>
+    <View style={styles.container}>
+      <View style={styles.header}>
         <ThemedText style={styles.title}>Sign In</ThemedText>
-      </ThemedView>
+      </View>
 
-      <ThemedView style={styles.form}>
+      <View style={styles.form}>
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -70,15 +69,15 @@ export default function SignInScreen() {
         <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
           <ThemedText style={styles.signInButtonText}>Sign In</ThemedText>
         </TouchableOpacity>
-      </ThemedView>
-    </ThemedView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingHorizontal: 20,
@@ -105,7 +104,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   signInButton: {
-    backgroundColor: '#000000',
+    backgroundColor: '#4CAF50',
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
