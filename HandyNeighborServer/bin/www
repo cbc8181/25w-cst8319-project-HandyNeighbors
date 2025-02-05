@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+require('dotenv').config();
+
+/**
+ * Module dependencies.
+ */
+
+const app = require('../app');
+const debug = require('debug')('handyneighborserver:server');
+const http = require('http');
+const pool = require('../config/db');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+const port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+const server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+async function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+
+  // test database connection
+  try {
+    await pool.query('SELECT NOW()');
+    console.log('\x1b[32m%s\x1b[0m', '✓ Database connection successful');
+  } catch (err) {
+    console.log('\x1b[31m%s\x1b[0m', '✗ Database connection failed:', err.message);
+  }
+
+  // print server info
+  console.log('\n=== HandyNeighbor Server ===');
+  console.log('\x1b[36m%s\x1b[0m', `⚡ Server is running on ${bind}`);
+  console.log('\x1b[36m%s\x1b[0m', `📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('\x1b[36m%s\x1b[0m', `🔑 JWT authentication enabled`);
+  console.log('\x1b[36m%s\x1b[0m', `🌐 API endpoints:`);
+  console.log('   - POST /api/auth/register');
+  console.log('   - POST /api/auth/login');
+  console.log('   - GET  /api/tasks');
+  console.log('   - POST /api/tasks');
+  console.log('\n=== Ready for connections ===\n');
+}
