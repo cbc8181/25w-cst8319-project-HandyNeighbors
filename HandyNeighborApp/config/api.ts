@@ -1,6 +1,6 @@
 // API Base URL
 // export const API_BASE_URL = 'http://localhost:8000/api';
-export const API_BASE_URL = 'http://192.168.2.12:3000/api';
+export const API_BASE_URL = 'http://localhost:3000/api';
 
 
 // Auth endpoints
