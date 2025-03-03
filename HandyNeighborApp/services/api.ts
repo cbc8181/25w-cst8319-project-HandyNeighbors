@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { API_BASE_URL, AUTH_ENDPOINTS } from '@/config/api';
+import { API_BASE_URL, AUTH_ENDPOINTS, buildUrl } from '@/config/api';
 
 interface ApiResponse<T> {
   data?: T;
@@ -24,8 +24,15 @@ export const apiClient = {
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
+      const fullUrl = buildUrl(endpoint);
+      console.log('Making GET request to:', fullUrl);
+      
       const headers = await this.getHeaders();
-      const response = await fetch(endpoint, { headers });
+      const response = await fetch(fullUrl, { 
+        headers,
+      });
+      
+      console.log('GET Response status:', response.status);
       
       if (response.status === 401) {
         await this.handleUnauthorized();
@@ -33,33 +40,50 @@ export const apiClient = {
       }
 
       const data = await response.json();
+      console.log('GET Response data:', data);
       return { data };
     } catch (error) {
-      return { error: 'Network error' };
+      console.error('GET Request error:', error);
+      return { error: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
   async post<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
     try {
+      const fullUrl = buildUrl(endpoint);
+      console.log('Making POST request to:', fullUrl);
+      console.log('Request body:', body);
+      
       const headers = await this.getHeaders();
-      const response = await fetch(endpoint, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
-
+      console.log('POST Response status:', response.status);
+      
       if (!response.ok) {
+        let errorMessage = 'Unknown error';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || `Server error: ${response.status}`;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status}`;
+        }
+        
         if (response.status === 401) {
           await this.handleUnauthorized();
         }
-        return { error: data.error || 'An error occurred' };
+        return { error: errorMessage };
       }
 
+      const data = await response.json();
+      console.log('POST Response data:', data);
       return { data };
     } catch (error) {
-      return { error: 'Network error' };
+      console.error('POST Request error:', error);
+      return { error: error instanceof Error ? error.message : 'Network error' };
     }
   },
 

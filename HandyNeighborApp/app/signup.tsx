@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -10,6 +10,7 @@ type UserType = 'student' | 'community';
 
 export default function SignUpScreen() {
   const [userType, setUserType] = useState<UserType>('student');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -19,18 +20,64 @@ export default function SignUpScreen() {
   });
 
   const handleSignUp = async () => {
-    const response = await apiClient.post(AUTH_ENDPOINTS.register, {
-      ...formData,
-      user_type: userType,
-    });
+    try {
+      // Validate required fields
+      if (!formData.full_name || !formData.email || !formData.password) {
+        Alert.alert('Error', 'Please fill in all required fields');
+        return;
+      }
 
-    if (response.error) {
-      Alert.alert('Error', response.error);
-      return;
+      setLoading(true);
+
+      // Log the request data
+      console.log('Attempting registration with:', {
+        ...formData,
+        user_type: userType,
+        password: '***hidden***'
+      });
+
+      // Check if the server is reachable with a quick test call
+      try {
+        const response = await fetch('http://localhost:3000/api/test');
+        if (!response.ok) {
+          throw new Error('Server test failed');
+        }
+        console.log('Server test successful');
+      } catch (serverError) {
+        console.error('Server connection test failed:', serverError);
+        Alert.alert(
+          'Server Connection Error',
+          'Cannot connect to the server. Please check that the server is running on localhost:3000.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await apiClient.post(AUTH_ENDPOINTS.register, {
+        ...formData,
+        user_type: userType,
+      });
+
+      if (error) {
+        Alert.alert('Registration Failed', error);
+        console.error('Registration error:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('Registration successful:', data);
+        Alert.alert(
+          'Success!',
+          'Your account has been created. Please sign in.',
+          [{ text: 'OK', onPress: () => router.replace('/signin') }]
+        );
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert('Registration Failed', 'An unexpected error occurred. Please check server connection and try again.');
+    } finally {
+      setLoading(false);
     }
-
-    Alert.alert('Success', 'Registration successful!');
-    router.replace('/welcome');
   };
 
   return (
@@ -112,8 +159,16 @@ export default function SignUpScreen() {
         </View>
 
         {/* Sign Up Button */}
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <ThemedText style={styles.signUpButtonText}>Sign Up</ThemedText>
+        <TouchableOpacity 
+          style={[styles.signUpButton, loading && styles.disabledButton]}
+          onPress={handleSignUp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <ThemedText style={styles.signUpButtonText}>Sign Up</ThemedText>
+          )}
         </TouchableOpacity>
       </View>
     </ThemedView>
@@ -207,5 +262,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 }); 

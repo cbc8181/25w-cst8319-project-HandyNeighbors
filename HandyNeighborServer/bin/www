@@ -27,7 +27,19 @@ const server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(port, '0.0.0.0', () => {
+  console.log(`Server running at http://localhost:${port}`);
+  console.log('To access from other devices on your network, use:');
+  const interfaces = require('os').networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      // Skip over non-IPv4 and internal (loopback) addresses
+      if (iface.family === 'IPv4' && !iface.internal) {
+        console.log(`  http://${iface.address}:${port}`);
+      }
+    }
+  }
+});
 server.on('error', onError);
 server.on('listening', onListening);
 
@@ -88,6 +100,7 @@ async function onListening() {
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
+  debug('Listening on ' + bind);
 
   // test database connection
   try {
