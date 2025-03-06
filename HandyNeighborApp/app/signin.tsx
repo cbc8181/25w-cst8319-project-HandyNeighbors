@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { apiClient } from '@/services/api';
 import { AUTH_ENDPOINTS } from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // define login response type
 interface LoginResponse {
@@ -22,26 +23,44 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+    try {
+      if (!email || !password) {
+        Alert.alert('Error', 'Please enter email and password');
+        return;
+      }
 
-    const response = await apiClient.post<LoginResponse>(AUTH_ENDPOINTS.login, { 
-      email, 
-      password 
-    });
+      setLoading(true);
+      console.log('Attempting login with email:', email);
 
-    if (response.error) {
-      Alert.alert('Error', 'Email address and password do not match.');
-      return;
-    }
+      const { data, error } = await apiClient.post<LoginResponse>(AUTH_ENDPOINTS.login, { email, password });
 
-    if (response.data) {
-      await login(response.data.token, response.data.user);
-      router.replace('/home');
+      if (error) {
+        console.error('Login error:', error);
+        Alert.alert('Login Failed', error);
+        return;
+      }
+
+      if (data) {
+        console.log('Login successful, user data:', data.user);
+        
+        // Save auth data
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Update auth context
+        login(data.token, data.user);
+        
+        // Navigate to home
+        router.replace('/home');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', 'An unexpected error occurred. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,23 +1,50 @@
-// API Base URL
-// export const API_BASE_URL = 'http://localhost:8000/api';
-export const API_BASE_URL = 'http://192.168.2.12:3000/api';
+import { Platform } from 'react-native';
 
+// Get the appropriate base URL based on the platform and environment
+const getBaseUrl = () => {
+  if (__DEV__) {
+    if (Platform.OS === 'android') {
+      // Android emulator uses 10.0.2.2 to access host machine
+      return 'http://10.0.2.2:3000';
+    } else if (Platform.OS === 'ios') {
+      // iOS simulator uses localhost
+      return 'http://localhost:3000';
+    } else {
+      // Web - use localhost 
+      return 'http://localhost:3000';
+    }
+  }
+  // Production URL (when you deploy your backend)
+  return 'https://your-production-url.com';
+};
+
+export const API_BASE_URL = getBaseUrl();
+
+// Full API URL with /api prefix
+const API_PREFIX = `${API_BASE_URL}/api`;
 
 // Auth endpoints
 export const AUTH_ENDPOINTS = {
-  register: `${API_BASE_URL}/auth/register/`,
-  login: `${API_BASE_URL}/auth/login/`,
+  register: `/auth/register`,
+  login: `/auth/login`,
 };
 
 // Task endpoints
 export const TASK_ENDPOINTS = {
-  list: `${API_BASE_URL}/tasks/`,
-  create: `${API_BASE_URL}/tasks/create/`,
-  detail: (id: string) => `${API_BASE_URL}/tasks/${id}/`,
+  list: `/tasks`,
+  create: `/tasks/create`,
+  detail: (id: string) => `/tasks/${id}`,
 };
 
 // User endpoints
 export const USER_ENDPOINTS = {
-  profile: `${API_BASE_URL}/users/profile/`,
-  update: `${API_BASE_URL}/users/update/`,
+  profile: `/users/profile`,
+  update: `/users/update`,
+};
+
+// Constructor for full URLs
+export const buildUrl = (endpoint: string) => {
+  // Make sure the endpoint starts with a slash
+  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${API_PREFIX}${formattedEndpoint}`;
 }; 

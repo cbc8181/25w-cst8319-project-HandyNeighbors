@@ -5,10 +5,10 @@ const logger = require('morgan');
 const session = require('express-session');
 const cors = require('cors');
 const authMiddleware = require('./middleware/auth');
+const dotenv = require('dotenv');
 
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-const taskRouter = require('./routes/tasks');
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
@@ -16,28 +16,41 @@ const app = express();
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
+// Basic middleware
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Session configuration
 app.use(session({
-  secret: 'your_secret_key',
+  secret: process.env.JWT_SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: { secure: false }
 }));
 
-// public routes
-app.use('/', indexRouter);
-app.use('/api/auth', usersRouter);
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is running!' });
+});
 
-// protected routes
-app.use('/api/tasks', authMiddleware, taskRouter);
-app.use('/api/users/profile', authMiddleware, usersRouter);
+// Auth routes
+app.use('/api/auth', require('./routes/users'));
+
+// Protected routes
+app.use('/api/tasks', authMiddleware, require('./routes/tasks'));
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
+});
 
 module.exports = app;

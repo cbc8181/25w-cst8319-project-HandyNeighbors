@@ -3,33 +3,54 @@ const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-
 exports.registerUser = async (req, res) => {
   const { email, password, full_name, user_type, student_id } = req.body;
 
   try {
-    // testing
-    console.log('Received registration data:', req.body);
+    console.log('Received registration request:', {
+      ...req.body,
+      password: '***hidden***'
+    });
 
-    // check if user already exists
+    // Check if user already exists
     const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userCheck.rows.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // hash password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // insert new user
+    // Insert new user
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, full_name, user_type, student_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      'INSERT INTO users (email, password_hash, full_name, user_type, student_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, user_type',
       [email, hashedPassword, full_name, user_type, student_id]
     );
 
-    res.status(201).json({ data: result.rows[0] });
+    const user = result.rows[0];
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: user.id,
+        email: user.email,
+        userType: user.user_type 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    console.log('Registration successful for:', user.email);
+
+    // Return user data and token
+    res.status(201).json({
+      token,
+      user
+    });
     
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Server error during registration' });
   }
 };
 
@@ -37,49 +58,54 @@ exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // check if user exists
-    const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    console.log('Login attempt for:', email);
+
+    // Check if user exists
+    const userCheck = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
+
     if (userCheck.rows.length === 0) {
-      return res.status(400).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = userCheck.rows[0];
 
-    // check password
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // generate JWT
+    // Generate JWT
     const token = jwt.sign(
       { 
-        userId: user.id,
+        id: user.id,
         email: user.email,
         userType: user.user_type 
-      }, 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    // return user info and token
-    res.status(200).json({
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          user_type: user.user_type
-        },
-        token
-      }
+    // Remove sensitive data
+    delete user.password_hash;
+
+    console.log('Login successful for:', email);
+
+    // Return user info and token
+    res.json({
+      token,
+      user
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error during login' });
   }
 };
 
-// verify user session
+// Verify user session
 exports.verifySession = async (req, res) => {
-  res.status(200).json({ data: { user: req.user } });
+  res.json({ user: req.user });
 };
