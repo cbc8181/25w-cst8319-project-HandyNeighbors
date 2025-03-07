@@ -28,33 +28,43 @@ export default function SignInScreen() {
   const handleSignIn = async () => {
     try {
       if (!email || !password) {
-        Alert.alert('Error', 'Please enter email and password');
+        Alert.alert('Error', 'Please fill in all fields');
         return;
       }
 
       setLoading(true);
       console.log('Attempting login with email:', email);
 
-      const { data, error } = await apiClient.post<LoginResponse>(AUTH_ENDPOINTS.login, { email, password });
+      const response = await apiClient.post<LoginResponse>(AUTH_ENDPOINTS.login, { 
+        email, 
+        password 
+      });
 
-      if (error) {
-        console.error('Login error:', error);
-        Alert.alert('Login Failed', error);
+      if (response.error) {
+        console.error('Login error:', response.error);
+        Alert.alert('Error', 'Email address and password do not match.');
         return;
       }
 
-      if (data) {
-        console.log('Login successful, user data:', data.user);
-        
+      if (response.data) {
+        console.log('Login response data:', response.data);
+
+        const { token, user } = response.data;
+
+        console.log('Token:', token);
+        console.log('User:', user);
+
         // Save auth data
-        await AsyncStorage.setItem('token', data.token);
-        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('user', JSON.stringify(user));
         
         // Update auth context
-        login(data.token, data.user);
+        await login(token, user);
         
-        // Navigate to home
-        router.replace('/home');
+        // Navigate to home with a slight delay to ensure context is updated
+        setTimeout(() => {
+          router.replace('/home');
+        }, 100);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -86,8 +96,14 @@ export default function SignInScreen() {
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-          <ThemedText style={styles.signInButtonText}>Sign In</ThemedText>
+        <TouchableOpacity 
+          style={styles.signInButton} 
+          onPress={handleSignIn}
+          disabled={loading}
+        >
+          <ThemedText style={styles.signInButtonText}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ThemedView>
