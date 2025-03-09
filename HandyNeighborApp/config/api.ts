@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import id from "ajv/lib/vocabularies/core/id";
 
 // Get the appropriate base URL based on the platform and environment
 const getBaseUrl = () => {
@@ -34,6 +35,7 @@ export const TASK_ENDPOINTS = {
   list: `/tasks`,
   create: `/tasks/create`,
   detail: (id: string) => `/tasks/${id}`,
+  nearby: `/tasks/nearby`,
 };
 
 // User endpoints
