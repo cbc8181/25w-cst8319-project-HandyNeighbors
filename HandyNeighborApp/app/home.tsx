@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { StyleSheet, View, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, ImageBackground } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,6 +8,7 @@ import TaskCard from '@/components/TaskCard';
 import BottomNavigation from '@/components/BottomNavigation';
 import CategorySelector from '@/components/CategorySelector';
 import useTasks from '@/hooks/useTasks';
+import useLocation from '@/hooks/useLocation';
 
 // Categories with better icon names and structure
 const categories = [
@@ -30,8 +31,17 @@ export default function HomeScreen() {
     setSearchTerm,
     selectedCategory, 
     setSelectedCategory,
-    fetchTasks
+    fetchTasks,
+    fetchNearbyTasks,
   } = useTasks();
+
+  const { location } = useLocation(); // ✅ 获取用户位置
+  // 📌 **在 `location` 变化时调用 `fetchNearbyTasks()`**
+  useEffect(() => {
+    if (location) {
+      fetchNearbyTasks();
+    }
+  }, [location, fetchNearbyTasks]);
 
   const handleTaskPress = (taskId: number) => {
     // Will be implemented to navigate to task details
