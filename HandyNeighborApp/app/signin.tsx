@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, Alert, View } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { apiClient } from '@/services/api';
 import { AUTH_ENDPOINTS } from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // define login response type
 interface LoginResponse {
@@ -21,36 +23,54 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+    try {
+      if (!email || !password) {
+        Alert.alert('Error', 'Please enter email and password');
+        return;
+      }
 
-    const response = await apiClient.post<LoginResponse>(AUTH_ENDPOINTS.login, { 
-      email, 
-      password 
-    });
+      setLoading(true);
+      console.log('Attempting login with email:', email);
 
-    if (response.error) {
-      Alert.alert('Error', 'Email address and password do not match.');
-      return;
-    }
+      const { data, error } = await apiClient.post<LoginResponse>(AUTH_ENDPOINTS.login, { email, password });
 
-    if (response.data) {
-      await login(response.data.token, response.data.user);
-      router.replace('/home');
+      if (error) {
+        console.error('Login error:', error);
+        Alert.alert('Login Failed', error);
+        return;
+      }
+
+      if (data) {
+        console.log('Login successful, user data:', data.user);
+        
+        // Save auth data
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Update auth context
+        login(data.token, data.user);
+        
+        // Navigate to home
+        router.replace('/home');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', 'An unexpected error occurred. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.header}>
         <ThemedText style={styles.title}>Sign In</ThemedText>
-      </View>
+      </ThemedView>
 
-      <View style={styles.form}>
+      <ThemedView style={styles.form}>
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -69,15 +89,15 @@ export default function SignInScreen() {
         <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
           <ThemedText style={styles.signInButtonText}>Sign In</ThemedText>
         </TouchableOpacity>
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9F9F9',
   },
   header: {
     paddingHorizontal: 20,
@@ -104,7 +124,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   signInButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#000000',
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
