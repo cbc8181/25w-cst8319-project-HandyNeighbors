@@ -138,7 +138,7 @@ export default function TaskManagementScreen() {
               created_at: item.created_at,
               user_id: item.creator_id
             }}
-            showStatusControls={true}
+            showStatusControls={false}
             onStatusUpdated={handleTaskStatusUpdated}
           />
         )}
@@ -306,5 +306,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 20,
+    paddingHorizontal: 4,
   },
 }); 

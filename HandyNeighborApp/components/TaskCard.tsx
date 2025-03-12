@@ -115,6 +115,14 @@ export default function TaskCard({
         <View style={styles.cardImagePlaceholder}>
           <Image source={getTaskImage()} style={styles.compactImage} resizeMode="cover" />
         </View>
+
+        {/* 分类标签移到任务名称前面 */}
+        {task.category && (
+          <View style={styles.compactCategoryTag}>
+            <ThemedText style={styles.categoryText}>{task.category}</ThemedText>
+          </View>
+        )}
+
         <ThemedText style={styles.compactTitle} numberOfLines={1}>{task.title}</ThemedText>
         <ThemedText style={styles.compactLocation} numberOfLines={1}>{task.location}</ThemedText>
         <ThemedText style={styles.compactReward}>${paymentAmount}</ThemedText>
@@ -130,10 +138,16 @@ export default function TaskCard({
   }
 
   return (
-    <View>
+    <View style={styles.cardWrapper}>
       <TouchableOpacity style={styles.card} onPress={handlePress}>
         <View style={styles.cardContent}>
           <View style={styles.cardTextContent}>
+            {/* 分类标签移到任务名称前面 */}
+            {task.category && (
+              <View style={styles.categoryTagInline}>
+                <ThemedText style={styles.categoryText}>{task.category}</ThemedText>
+              </View>
+            )}
             <ThemedText style={styles.title}>{task.title}</ThemedText>
             <ThemedText style={styles.description} numberOfLines={2}>
               {task.description}
@@ -151,33 +165,32 @@ export default function TaskCard({
           </View>
         </View>
 
-        {/* 显示任务状态和分类 */}
+        {/* 移除原来位置的分类标签 */}
         <View style={styles.tagsContainer}>
-          {task.status && (
-            <View style={[styles.statusBadge, getStatusStyle(task.status)]}>
-              <ThemedText style={styles.statusText}>{getStatusLabel(task.status)}</ThemedText>
-            </View>
-          )}
-
-          {task.category && (
-            <View style={styles.categoryTag}>
-              <ThemedText style={styles.categoryText}>{task.category}</ThemedText>
-            </View>
-          )}
         </View>
       </TouchableOpacity>
 
-      {/* 状态管理控件 */}
-      {showStatusControls && (
-        <TaskStatusManager
-          taskId={task.id}
-          currentStatus={taskStatus as any}
-          isCreator={isCreator}
-          isHelper={isHelper}
-          onStatusUpdated={handleStatusUpdated as any}
-          compact={true}
-        />
-      )}
+      {/* 状态标签和操作按钮放在同一行 */}
+      <View style={styles.statusActionRow}>
+        {/* 状态标签 */}
+        {task.status && (
+          <View style={[styles.statusBadgeBottom, getStatusStyle(task.status)]}>
+            <ThemedText style={styles.statusText}>{getStatusLabel(task.status)}</ThemedText>
+          </View>
+        )}
+
+        {/* 状态管理控件 */}
+        {showStatusControls && (
+          <TaskStatusManager
+            taskId={task.id}
+            currentStatus={taskStatus as any}
+            isCreator={isCreator}
+            isHelper={isHelper}
+            onStatusUpdated={handleStatusUpdated as any}
+            compact={true}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -205,16 +218,21 @@ function getStatusStyle(status: string): any {
 }
 
 const styles = StyleSheet.create({
+  cardWrapper: {
+    marginBottom: 20,
+    position: 'relative',
+  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
   },
   cardContent: {
     flexDirection: 'row',
@@ -285,8 +303,29 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  statusActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#F9F9F9',
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statusBadgeBottom: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
   statusText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -330,5 +369,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#000000',
+  },
+
+  categoryTagInline: {
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+
+  compactCategoryTag: {
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
   },
 }); 
