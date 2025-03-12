@@ -61,22 +61,24 @@ export default function SignUpScreen() {
       });
 
       if (error) {
-        Alert.alert('Registration Failed', error);
-        console.error('Registration error:', error);
+        // Handle specific error
+        if (error.includes('User already exists')) {
+          Alert.alert('Registration Failed', 'This email is already registered. Please try signing in instead.');
+        } else {
+          Alert.alert('Registration Failed', error);
+        }
         return;
       }
 
       if (data) {
-        console.log('Registration successful:', data);
-        Alert.alert(
-          'Success!',
-          'Your account has been created. Please sign in.',
-          [{ text: 'OK', onPress: () => router.replace('/signin') }]
-        );
+        // 注册成功后直接跳转到登录页
+        router.replace('/signin');
+        // 可选：显示成功提示
+        Alert.alert('Success', 'Registration successful! Please sign in.');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      Alert.alert('Registration Failed', 'An unexpected error occurred. Please check server connection and try again.');
+      Alert.alert('Registration Failed', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -139,8 +141,8 @@ export default function SignUpScreen() {
 
         {/* Radio Buttons */}
         <View style={styles.radioGroup}>
-          <TouchableOpacity 
-            style={styles.radioButton} 
+          <TouchableOpacity
+            style={styles.radioButton}
             onPress={() => setUserType('student')}
           >
             <View style={styles.radio}>
@@ -149,8 +151,8 @@ export default function SignUpScreen() {
             <ThemedText style={styles.radioLabel}>Student</ThemedText>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.radioButton} 
+          <TouchableOpacity
+            style={styles.radioButton}
             onPress={() => setUserType('community')}
           >
             <View style={styles.radio}>
@@ -161,7 +163,7 @@ export default function SignUpScreen() {
         </View>
 
         {/* Sign Up Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.signUpButton, loading && styles.disabledButton]}
           onPress={handleSignUp}
           disabled={loading}

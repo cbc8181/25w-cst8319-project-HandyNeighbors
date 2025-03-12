@@ -21,7 +21,7 @@ const getBaseUrl = () => {
 export const API_BASE_URL = getBaseUrl();
 
 // Full API URL with /api prefix
-const API_PREFIX = `${API_BASE_URL}/api`;
+export const API_PREFIX = `${API_BASE_URL}/api`;
 
 // Auth endpoints
 export const AUTH_ENDPOINTS = {
@@ -32,7 +32,7 @@ export const AUTH_ENDPOINTS = {
 // Task endpoints
 export const TASK_ENDPOINTS = {
   list: 'tasks',
-  create: 'tasks/create',
+  create: 'tasks',
   detail: (id: string) => `tasks/${id}`,
 };
 
@@ -43,10 +43,10 @@ export const USER_ENDPOINTS = {
 };
 
 // Constructor for full URLs
-export const buildUrl = (endpoint: string) => {
+export const buildUrl = (endpoint: string): string => {
   // Remove any leading slashes from the endpoint
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const url = `${API_PREFIX}/${cleanEndpoint}`;
-  console.log('Building URL:', url); // Add logging
+  console.log('Built URL:', url);
   return url;
 }; 
