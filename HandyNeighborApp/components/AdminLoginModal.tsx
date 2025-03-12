@@ -9,6 +9,7 @@ import {
 import { ThemedText } from './ThemedText';
 import { ThemedTextInput } from './ThemedTextInput';
 import { useAuth } from '@/contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AdminLoginModalProps {
   visible: boolean;
@@ -38,21 +39,25 @@ export function AdminLoginModal({ visible, onClose }: AdminLoginModalProps) {
 
         Alert.alert('Success', 'Login successful! Redirecting to dashboard...');
 
-        // 模拟用户数据
-        const mockUser = {
-          id: 1,
-          username: 'admin',
-          user_type: 'admin',
+        // 创建管理员用户数据
+        const adminUser = {
+          id: 999,
           email: 'admin@example.com',
-          full_name: 'Admin User'
+          full_name: 'Admin User',
+          user_type: 'admin'
         };
 
-        const mockToken = 'mock-admin-token-12345';
+        // 创建token
+        const token = `admin_token_${Date.now()}`;
+
+        // 保存到AsyncStorage
+        await AsyncStorage.setItem('admin_user', JSON.stringify(adminUser));
+        await AsyncStorage.setItem('admin_token', token);
 
         // 延迟一下，让用户看到成功消息
         setTimeout(async () => {
           // 调用 login 函数，它会处理数据存储和路由跳转
-          await login(mockToken, mockUser);
+          await login(token, adminUser);
 
           // 关闭模态框
           onClose();

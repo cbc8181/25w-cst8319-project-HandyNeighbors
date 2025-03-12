@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -21,7 +21,15 @@ function RootLayoutNav() {
   useEffect(() => {
     const inPublicRoute = publicRoutes.includes(segments[0]);
 
+    console.log('Route check:', {
+      isAuthenticated,
+      currentRoute: segments[0],
+      inPublicRoute
+    });
+
+    // 只有当不在公共路由且未通过身份验证时才重定向
     if (!isAuthenticated && !inPublicRoute) {
+      console.log('Redirecting to welcome page from:', segments[0]);
       router.replace('/welcome');
     }
   }, [isAuthenticated, segments]);
@@ -67,29 +75,8 @@ function RootLayoutNav() {
           }}
         />
 
-        {/* New Task Management Routes */}
-        <Stack.Screen
-          name="tasks/create"
-          options={{
-            headerShown: true,
-            title: 'Create Task',
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: '#000',
-          }}
-        />
-        <Stack.Screen
-          name="tasks/[id]"
-          options={{
-            headerShown: true,
-            title: 'Task Details',
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: '#000',
-          }}
-        />
+        {/* Admin Routes */}
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
@@ -99,6 +86,8 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loaded) {

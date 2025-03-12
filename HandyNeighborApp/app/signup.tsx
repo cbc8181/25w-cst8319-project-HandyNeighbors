@@ -1,273 +1,293 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, View, StyleSheet, Alert, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import { ThemedTextInput } from '../components/ThemedTextInput';
+import { ThemedText } from '../components/ThemedText';
+import { ThemedButton } from '../components/ThemedButton';
+import { ThemedView } from '../components/ThemedView';
 import { router } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { apiClient } from '@/services/api';
-import { API_BASE_URL, AUTH_ENDPOINTS } from '@/config/api';
+import axios from 'axios';
+import { API_PREFIX, AUTH_ENDPOINTS } from '../config/api';
 
-type UserType = 'student' | 'community';
+// 创建API客户端
+const apiClient = axios.create({
+  baseURL: API_PREFIX,
+});
 
-export default function SignUpScreen() {
-  const [userType, setUserType] = useState<UserType>('student');
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
-    password: '',
-    postal_code: '',
-    student_id: '',
-  });
+export default function SignUp() {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [userType, setUserType] = useState('community');
+  const [postalCode, setPostalCode] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   const handleSignUp = async () => {
+    setError('');
+    setIsLoading(true);
+
+    // 表单验证
+    if (!fullName || !email || !password) {
+      setError('Please fill in all required fields');
+      setIsLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
+    if (userType === 'student' && !studentId) {
+      setError('Student ID is required for student accounts');
+      setIsLoading(false);
+      return;
+    }
+
+    // 创建注册数据
+    const userData = {
+      full_name: fullName,
+      email: email,
+      password: password,
+      user_type: userType,
+      postal_code: postalCode,
+      ...(userType === 'student' && { student_id: studentId }),
+    };
+
     try {
-      // Validate required fields
-      if (!formData.full_name || !formData.email || !formData.password) {
-        Alert.alert('Error', 'Please fill in all required fields');
-        return;
-      }
+      // 通过API发送注册请求
+      const response = await apiClient.post(AUTH_ENDPOINTS.register, userData);
 
-      setLoading(true);
+      console.log('Registration response:', response.data);
+      setRegistrationSuccess(true);
 
-      // Log the request data
-      console.log('Attempting registration with:', {
-        ...formData,
-        user_type: userType,
-        password: '***hidden***'
-      });
-
-      // Check if the server is reachable with a quick test call
-      try {
-        const testUrl = `${API_BASE_URL}/api/test`;
-        console.log('Testing server connection at:', testUrl);
-        const response = await fetch(testUrl);
-        if (!response.ok) {
-          throw new Error(`Server test failed with status: ${response.status}`);
-        }
-        console.log('Server test successful');
-      } catch (serverError) {
-        console.error('Server connection test failed:', serverError);
-        Alert.alert(
-          'Server Connection Error',
-          'Cannot connect to the server. Please check your network connection and try again.'
-        );
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await apiClient.post(AUTH_ENDPOINTS.register, {
-        ...formData,
-        user_type: userType,
-      });
-
-      if (error) {
-        // Handle specific error
-        if (error.includes('User already exists')) {
-          Alert.alert('Registration Failed', 'This email is already registered. Please try signing in instead.');
-        } else {
-          Alert.alert('Registration Failed', error);
-        }
-        return;
-      }
-
-      if (data) {
-        // 注册成功后直接跳转到登录页
-        router.replace('/signin');
-        // 可选：显示成功提示
-        Alert.alert('Success', 'Registration successful! Please sign in.');
-      }
-    } catch (error) {
+      // 显示成功消息
+      Alert.alert(
+        'Registration Successful',
+        'Your account has been created. Please log in.',
+        [{ text: 'OK', onPress: () => router.replace('/signin') }]
+      );
+    } catch (error: any) {
       console.error('Registration error:', error);
-      Alert.alert('Registration Failed', 'An unexpected error occurred');
+
+      // 获取API错误消息
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Registration failed. Please try again.';
+      setError(errorMessage);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  // 当注册成功时自动导航到登录页面
+  React.useEffect(() => {
+    if (registrationSuccess) {
+      const timer = setTimeout(() => {
+        router.replace('/signin');
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [registrationSuccess]);
+
   return (
-    <ThemedView style={styles.container}>
-      {/* Logo and Title */}
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          {/* <Image 
-            source={require('@/assets/images/logo-icon.png')} 
-            style={styles.logoIcon} 
-          /> */}
-          <ThemedText style={styles.logoText}>HandyNeighbor</ThemedText>
-        </View>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ThemedView style={styles.container}>
         <ThemedText style={styles.title}>Sign Up</ThemedText>
-      </View>
 
-      {/* Form */}
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          placeholderTextColor="#999"
-          value={formData.full_name}
-          onChangeText={(text) => setFormData({ ...formData, full_name: text })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email Address"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={formData.email}
-          onChangeText={(text) => setFormData({ ...formData, email: text })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#999"
-          secureTextEntry
-          value={formData.password}
-          onChangeText={(text) => setFormData({ ...formData, password: text })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Postal Code"
-          placeholderTextColor="#999"
-          value={formData.postal_code}
-          onChangeText={(text) => setFormData({ ...formData, postal_code: text })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Student ID"
-          placeholderTextColor="#999"
-          value={formData.student_id}
-          onChangeText={(text) => setFormData({ ...formData, student_id: text })}
-        />
-
-        {/* Radio Buttons */}
-        <View style={styles.radioGroup}>
-          <TouchableOpacity
-            style={styles.radioButton}
-            onPress={() => setUserType('student')}
-          >
-            <View style={styles.radio}>
-              {userType === 'student' && <View style={styles.radioInner} />}
-            </View>
-            <ThemedText style={styles.radioLabel}>Student</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.radioButton}
-            onPress={() => setUserType('community')}
-          >
-            <View style={styles.radio}>
-              {userType === 'community' && <View style={styles.radioInner} />}
-            </View>
-            <ThemedText style={styles.radioLabel}>Community</ThemedText>
-          </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <ThemedText style={styles.inputLabel}>Full Name *</ThemedText>
+          <ThemedTextInput
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Full Name"
+            style={styles.input}
+          />
         </View>
 
-        {/* Sign Up Button */}
-        <TouchableOpacity
-          style={[styles.signUpButton, loading && styles.disabledButton]}
-          onPress={handleSignUp}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <ThemedText style={styles.signUpButtonText}>Sign Up</ThemedText>
-          )}
+        <View style={styles.inputContainer}>
+          <ThemedText style={styles.inputLabel}>Email *</ThemedText>
+          <ThemedTextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <ThemedText style={styles.inputLabel}>Password *</ThemedText>
+          <ThemedTextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            secureTextEntry
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <ThemedText style={styles.inputLabel}>Confirm Password *</ThemedText>
+          <ThemedTextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm Password"
+            secureTextEntry
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <ThemedText style={styles.inputLabel}>Postal Code</ThemedText>
+          <ThemedTextInput
+            value={postalCode}
+            onChangeText={setPostalCode}
+            placeholder="Postal Code"
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.userTypeContainer}>
+          <ThemedText style={styles.userTypeLabel}>User Type *</ThemedText>
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity
+              style={[
+                styles.userTypeButton,
+                userType === 'student' && styles.selectedUserType
+              ]}
+              onPress={() => setUserType('student')}
+            >
+              <ThemedText
+                style={[
+                  styles.userTypeButtonText,
+                  userType === 'student' && styles.selectedUserTypeText
+                ]}
+              >
+                Student
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.userTypeButton,
+                userType === 'community' && styles.selectedUserType
+              ]}
+              onPress={() => setUserType('community')}
+            >
+              <ThemedText
+                style={[
+                  styles.userTypeButtonText,
+                  userType === 'community' && styles.selectedUserTypeText
+                ]}
+              >
+                Community
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {userType === 'student' && (
+          <View style={styles.inputContainer}>
+            <ThemedText style={styles.inputLabel}>Student ID *</ThemedText>
+            <ThemedTextInput
+              value={studentId}
+              onChangeText={setStudentId}
+              placeholder="Student ID"
+              style={styles.input}
+            />
+          </View>
+        )}
+
+        {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
+
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#0a7ea4" />
+        ) : (
+          <ThemedButton title="Sign Up" onPress={handleSignUp} style={styles.button} />
+        )}
+
+        <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
+          <ThemedText style={styles.backText}>Return to previous page</ThemedText>
         </TouchableOpacity>
-      </View>
-    </ThemedView>
+      </ThemedView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logoIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-  },
-  logoText: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: '600',
+    padding: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  form: {
-    flex: 1,
-    paddingHorizontal: 20,
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 16,
+    marginBottom: 5,
   },
   input: {
-    height: 48,
+    marginBottom: 5,
+  },
+  userTypeContainer: {
+    marginVertical: 15,
+  },
+  userTypeLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  userTypeButton: {
+    flex: 1,
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
-    borderRadius: 8,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  radioGroup: {
-    flexDirection: 'row',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  radioButton: {
-    flexDirection: 'row',
+    borderColor: '#CCCCCC',
     alignItems: 'center',
-    marginRight: 24,
-  },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
     borderRadius: 5,
-    backgroundColor: '#4CAF50',
+    marginHorizontal: 5,
   },
-  radioLabel: {
-    fontSize: 16,
-    color: '#000000',
+  selectedUserType: {
+    backgroundColor: '#0a7ea4',
+    borderColor: '#0a7ea4',
   },
-  signUpButton: {
-    backgroundColor: '#4CAF50',
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
+  userTypeButtonText: {
+    color: '#11181C',
+  },
+  selectedUserTypeText: {
+    color: 'white',
+  },
+  errorText: {
+    color: 'red',
+    marginVertical: 10,
+  },
+  button: {
+    marginTop: 20,
+  },
+  backLink: {
+    marginTop: 15,
     alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: 20,
   },
-  signUpButtonText: {
-    color: '#FFFFFF',
+  backText: {
+    color: '#0a7ea4',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    opacity: 0.7,
   },
 }); 

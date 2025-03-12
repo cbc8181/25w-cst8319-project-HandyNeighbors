@@ -8,6 +8,9 @@ interface User {
   email: string;
   full_name: string;
   user_type: string;
+  postal_code?: string;
+  student_id?: string;
+  [key: string]: any; // 允许额外的字段
 }
 
 // 定义认证上下文类型
@@ -32,16 +35,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
+      console.log('Checking authentication state...');
+
       const storedToken = await AsyncStorage.getItem('token');
       const storedUser = await AsyncStorage.getItem('user');
 
+      console.log('Stored token:', storedToken ? 'exists' : 'null');
+      console.log('Stored user:', storedUser ? 'exists' : 'null');
+
       if (storedToken && storedUser) {
+        const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(parsedUser);
         setIsAuthenticated(true);
+        console.log('User authenticated:', parsedUser.email);
+      } else {
+        // 确保如果没有存储的凭据，状态被重置
+        setToken(null);
+        setUser(null);
+        setIsAuthenticated(false);
+        console.log('No stored credentials found');
       }
     } catch (error) {
       console.error('Error checking auth:', error);
+      // 出错时重置状态
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
     }
   };
 
@@ -57,8 +77,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Authentication state set, now navigating');
 
-      // 直接跳转到管理员仪表板
-      router.replace('/admin/dashboard');
+      // 根据用户类型导航到不同页面
+      if (user.user_type === 'admin') {
+        // 管理员用户导航到管理员仪表板
+        router.replace('/admin/dashboard');
+      } else {
+        // 普通用户导航到主页
+        router.replace('/home');
+      }
     } catch (error) {
       console.error('Error storing auth data:', error);
     }

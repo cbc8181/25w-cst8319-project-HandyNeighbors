@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Image, View, Dimensions, TouchableOpacity } from 'react-native';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { AdminLoginModal } from '@/components/AdminLoginModal';
@@ -61,7 +61,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: 50,
   },
   content: {
     flex: 1,
@@ -87,18 +86,11 @@ const styles = StyleSheet.create({
     height: IMAGE_HEIGHT,
     marginTop: 20,
   },
-
   buttonContainer: {
     width: '100%',
     paddingHorizontal: 20,
     paddingBottom: 40,
     gap: 12,
-  },
-  buttonWrapper: {
-    // backgroundColor: 'green',
-    height: 40,
-    alignItems: 'center',
-    width: '100%',
   },
   button: {
     width: '100%',
@@ -110,11 +102,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
   joinButton: {
     backgroundColor: '#4CAF50',
     elevation: 2,
-    shadowColor: '#000', // iOS 阴影
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -127,7 +118,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#CCCCCC',
   },
-
   joinButtonText: {
     color: '#ffffff',
   },
