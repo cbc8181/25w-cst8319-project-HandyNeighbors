@@ -11,8 +11,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Dashb', icon: 'grid', path: '/dashboard' },
   { name: 'Home', icon: 'home', path: '/home' },
+  { name: 'Tasks', icon: 'list', path: '/tasks/manage' },
   { name: 'Search', icon: 'search', path: '/search' },
   { name: 'Settings', icon: 'settings', path: '/settings' },
 ];
@@ -29,15 +29,15 @@ export default function BottomNavigation() {
       {navItems.map((item) => {
         const isActive = currentPath === item.path;
         return (
-          <TouchableOpacity 
-            key={item.name} 
-            style={[styles.navItem, isActive && styles.activeNavItem]} 
+          <TouchableOpacity
+            key={item.name}
+            style={[styles.navItem, isActive && styles.activeNavItem]}
             onPress={() => handleNavigation(item.path)}
           >
-            <Ionicons 
-              name={item.icon as any} 
-              size={24} 
-              color={isActive ? '#000' : '#666'} 
+            <Ionicons
+              name={item.icon as any}
+              size={24}
+              color={isActive ? '#000' : '#666'}
             />
             <ThemedText style={[styles.navText, isActive && styles.activeNavText]}>
               {item.name}

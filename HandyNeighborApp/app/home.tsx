@@ -35,8 +35,8 @@ export default function HomeScreen() {
   } = useTasks();
 
   const handleTaskPress = (taskId: number) => {
-    // Will be implemented to navigate to task details
-    console.log(`Task ${taskId} pressed`);
+    // 导航到任务详情页面
+    router.push(`/tasks/${taskId}`);
   };
 
   const handleRefresh = () => {

@@ -124,5 +124,56 @@ export const apiClient = {
     }
   },
 
-  // Add other methods (PUT, DELETE, etc.) as needed
+  async put<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
+    try {
+      const fullUrl = buildUrl(endpoint);
+      console.log('PUT Request:', {
+        url: fullUrl,
+        body: body
+      });
+
+      const headers = await this.getHeaders();
+
+      const response = await fetch(fullUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      console.log('Response status:', response.status);
+
+      // 尝试解析响应数据
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log('Response data:', responseData);
+      } catch (e) {
+        console.error('Error parsing response:', e);
+        return { error: 'Invalid server response' };
+      }
+
+      // 处理不同的响应状态
+      if (response.status === 401) {
+        await this.handleUnauthorized();
+        return { error: 'Unauthorized access' };
+      }
+
+      if (!response.ok) {
+        const errorMessage = responseData?.error || responseData?.message || `Server error: ${response.status}`;
+        console.error('Request failed:', errorMessage);
+        return { error: errorMessage };
+      }
+
+      return { data: responseData };
+    } catch (error) {
+      console.error('Request failed:', error);
+      return {
+        error: error instanceof Error
+          ? error.message
+          : 'Network request failed'
+      };
+    }
+  },
+
+  // Add other methods (DELETE, etc.) as needed
 }; 
