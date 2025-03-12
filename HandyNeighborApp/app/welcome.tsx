@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Image, View, Dimensions, TouchableOpacity } from 'react-native';
 import { Link, router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { AdminLoginModal } from '@/components/AdminLoginModal';
 
 const { width } = Dimensions.get('window');
-const IMAGE_HEIGHT = 200; 
+const IMAGE_HEIGHT = 200;
 
 export default function WelcomeScreen() {
+  const [adminModalVisible, setAdminModalVisible] = useState(false);
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
@@ -15,29 +18,41 @@ export default function WelcomeScreen() {
         <ThemedText style={styles.subtitle}>
           Find and accept tasks in your community
         </ThemedText>
-        
-        <Image 
+
+        <Image
           source={require('@/assets/images/homepage.jpg')}
           style={styles.image}
           resizeMode="contain"
         />
       </View>
-      
+
       <View style={styles.buttonContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.button, styles.joinButton]}
           onPress={() => router.push('/signup')}
         >
           <ThemedText style={[styles.buttonText, styles.joinButtonText]}>Join</ThemedText>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={[styles.button, styles.signInButton]}
           onPress={() => router.push('/signin')}
         >
           <ThemedText style={[styles.buttonText, styles.signInButtonText]}>Sign In</ThemedText>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.adminLink}
+          onPress={() => setAdminModalVisible(true)}
+        >
+          <ThemedText style={styles.adminLinkText}>Admin Login</ThemedText>
+        </TouchableOpacity>
       </View>
+
+      <AdminLoginModal
+        visible={adminModalVisible}
+        onClose={() => setAdminModalVisible(false)}
+      />
     </ThemedView>
   );
 }
@@ -68,7 +83,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   image: {
-    width: width * 0.8, 
+    width: width * 0.8,
     height: IMAGE_HEIGHT,
     marginTop: 20,
   },
@@ -87,7 +102,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    borderRadius: 25, 
+    borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
   },
@@ -97,7 +112,7 @@ const styles = StyleSheet.create({
   },
 
   joinButton: {
-    backgroundColor: '#4CAF50', 
+    backgroundColor: '#4CAF50',
     elevation: 2,
     shadowColor: '#000', // iOS 阴影
     shadowOffset: {
@@ -117,6 +132,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   signInButtonText: {
-    color: '#ffffff', 
+    color: '#ffffff',
+  },
+  adminLink: {
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 8,
+  },
+  adminLinkText: {
+    fontSize: 14,
+    color: '#666666',
+    textDecorationLine: 'underline',
   },
 }); 
