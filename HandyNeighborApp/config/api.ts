@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import id from "ajv/lib/vocabularies/core/id";
 
 // Get the appropriate base URL based on the platform and environment
 const getBaseUrl = () => {
@@ -8,8 +7,8 @@ const getBaseUrl = () => {
       // Android emulator uses 10.0.2.2 to access host machine
       return 'http://10.0.2.2:3000';
     } else if (Platform.OS === 'ios') {
-      // iOS simulator uses localhost
-      return 'http://localhost:3000';
+      // For iOS devices, use your computer's IP address
+      return 'http://192.168.68.50:3000';
     } else {
       // Web - use localhost 
       return 'http://localhost:3000';
@@ -22,31 +21,32 @@ const getBaseUrl = () => {
 export const API_BASE_URL = getBaseUrl();
 
 // Full API URL with /api prefix
-const API_PREFIX = `${API_BASE_URL}/api`;
+export const API_PREFIX = `${API_BASE_URL}/api`;
 
 // Auth endpoints
 export const AUTH_ENDPOINTS = {
-  register: `/auth/register`,
-  login: `/auth/login`,
+  register: 'auth/register',
+  login: 'auth/login',
 };
 
 // Task endpoints
 export const TASK_ENDPOINTS = {
-  list: `/tasks`,
-  create: `/tasks/create`,
-  detail: (id: string) => `/tasks/${id}`,
-  nearby: `/tasks/nearby`,
+  list: 'tasks',
+  create: 'tasks',
+  detail: (id: string) => `tasks/${id}`,
 };
 
 // User endpoints
 export const USER_ENDPOINTS = {
-  profile: `/users/profile`,
-  update: `/users/update`,
+  profile: 'users/profile',
+  update: 'users/update',
 };
 
 // Constructor for full URLs
-export const buildUrl = (endpoint: string) => {
-  // Make sure the endpoint starts with a slash
-  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  return `${API_PREFIX}${formattedEndpoint}`;
+export const buildUrl = (endpoint: string): string => {
+  // Remove any leading slashes from the endpoint
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  const url = `${API_PREFIX}/${cleanEndpoint}`;
+  console.log('Built URL:', url);
+  return url;
 }; 

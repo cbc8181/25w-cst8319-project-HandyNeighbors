@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import { StyleSheet, View, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, ImageBackground } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,7 +8,7 @@ import TaskCard from '@/components/TaskCard';
 import BottomNavigation from '@/components/BottomNavigation';
 import CategorySelector from '@/components/CategorySelector';
 import useTasks from '@/hooks/useTasks';
-import useLocation from '@/hooks/useLocation';
+import { router } from 'expo-router';
 
 // Categories with better icon names and structure
 const categories = [
@@ -22,30 +22,21 @@ const categories = [
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { 
-    loading, 
+  const {
+    loading,
     error,
-    nearbyTasks, 
+    nearbyTasks,
     filteredTasks,
-    searchTerm, 
+    searchTerm,
     setSearchTerm,
-    selectedCategory, 
+    selectedCategory,
     setSelectedCategory,
-    fetchTasks,
-    fetchNearbyTasks,
+    fetchTasks
   } = useTasks();
 
-  const { location } = useLocation(); // ✅ 获取用户位置
-  // 📌 **在 `location` 变化时调用 `fetchNearbyTasks()`**
-  useEffect(() => {
-    if (location) {
-      fetchNearbyTasks();
-    }
-  }, [location, fetchNearbyTasks]);
-
   const handleTaskPress = (taskId: number) => {
-    // Will be implemented to navigate to task details
-    console.log(`Task ${taskId} pressed`);
+    // 导航到任务详情页面
+    router.push(`/tasks/${taskId}`);
   };
 
   const handleRefresh = () => {
@@ -77,6 +68,15 @@ export default function HomeScreen() {
             placeholderTextColor="#999"
           />
         </View>
+
+        {/* Create Task Button */}
+        <TouchableOpacity
+          style={styles.createTaskButton}
+          onPress={() => router.push('/tasks/create')}
+        >
+          <Ionicons name="add" size={24} color="#FFF" />
+          <ThemedText style={styles.createTaskButtonText}>Create Task</ThemedText>
+        </TouchableOpacity>
       </View>
 
       {error ? (
@@ -106,11 +106,11 @@ export default function HomeScreen() {
                   <ThemedText style={styles.noTasksText}>No nearby tasks available.</ThemedText>
                 ) : (
                   nearbyTasks.map(task => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      compact 
-                      onPress={() => handleTaskPress(task.id)} 
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      compact
+                      onPress={() => handleTaskPress(task.id)}
                     />
                   ))
                 )
@@ -121,7 +121,7 @@ export default function HomeScreen() {
           {/* Categories Section */}
           <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>Categories</ThemedText>
-            <CategorySelector 
+            <CategorySelector
               categories={categories}
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
@@ -146,10 +146,10 @@ export default function HomeScreen() {
                 </View>
               ) : (
                 filteredTasks.map(task => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onPress={() => handleTaskPress(task.id)} 
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onPress={() => handleTaskPress(task.id)}
                   />
                 ))
               )
@@ -295,5 +295,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 10,
     marginVertical: 10,
+  },
+  createTaskButton: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 24,
+    marginTop: 16,
+  },
+  createTaskButtonText: {
+    color: '#FFF',
+    marginLeft: 8,
+    fontWeight: '600',
   },
 }); 

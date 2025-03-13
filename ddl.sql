@@ -24,6 +24,7 @@ CREATE TABLE tasks (
     postal_code VARCHAR(10) NOT NULL,
     location GEOGRAPHY(POINT) NOT NULL,  -- 存储任务地点的经纬度
     reward DECIMAL(10,2),
+    category VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP WITH TIME ZONE
