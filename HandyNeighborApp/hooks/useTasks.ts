@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/services/api';
 import { TASK_ENDPOINTS } from '@/config/api';
 import { Task } from '@/components/TaskCard';
-import useLocation from '@/hooks/useLocation';
 
 interface UseTasksOptions {
   initialLoadingState?: boolean;
@@ -17,7 +16,6 @@ export default function useTasks(options: UseTasksOptions = {}) {
     initialCategory = null
   } = options;
 
-  const { location } = useLocation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [nearbyTasks, setNearbyTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(initialLoadingState);
@@ -73,27 +71,6 @@ export default function useTasks(options: UseTasksOptions = {}) {
     }
   }, []);
 
-  /** 📌 获取附近的任务（基于用户当前位置） */
-  const fetchNearbyTasks = useCallback(async () => {
-    if (!location) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { latitude, longitude } = location.coords;
-      const { data } = await apiClient.get<Task[]>(`${TASK_ENDPOINTS.nearby}?lat=${latitude}&lng=${longitude}&radius=5000`);
-
-      if (data) {
-        setNearbyTasks(data);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch nearby tasks');
-    } finally {
-      setLoading(false);
-    }
-  }, [location]);
-
   const filterTasks = useCallback(() => {
     let filtered = [...tasks];
     
@@ -120,12 +97,6 @@ export default function useTasks(options: UseTasksOptions = {}) {
     fetchTasks();
   }, [fetchTasks]);
 
-  useEffect(() => {
-    if (location) {
-      fetchNearbyTasks();
-    }
-  }, [location, fetchNearbyTasks]);
-
   return {
     tasks,
     nearbyTasks,
@@ -137,7 +108,6 @@ export default function useTasks(options: UseTasksOptions = {}) {
     setSelectedCategory,
     fetchTasks,
     filterTasks,
-    filteredTasks: filterTasks(),
-    fetchNearbyTasks,
+    filteredTasks: filterTasks()
   };
 } 

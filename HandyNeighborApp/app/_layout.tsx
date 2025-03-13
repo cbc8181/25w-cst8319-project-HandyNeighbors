@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -20,8 +20,16 @@ function RootLayoutNav() {
 
   useEffect(() => {
     const inPublicRoute = publicRoutes.includes(segments[0]);
-    
+
+    console.log('Route check:', {
+      isAuthenticated,
+      currentRoute: segments[0],
+      inPublicRoute
+    });
+
+    // 只有当不在公共路由且未通过身份验证时才重定向
     if (!isAuthenticated && !inPublicRoute) {
+      console.log('Redirecting to welcome page from:', segments[0]);
       router.replace('/welcome');
     }
   }, [isAuthenticated, segments]);
@@ -31,41 +39,44 @@ function RootLayoutNav() {
       <Stack>
         {/* Public Routes */}
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="signin" 
-          options={{ 
-            headerShown: true, 
+        <Stack.Screen
+          name="signin"
+          options={{
+            headerShown: true,
             title: 'Sign In',
             headerStyle: {
               backgroundColor: '#fff',
             },
             headerTintColor: '#000',
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="signup" 
-          options={{ 
-            headerShown: true, 
+        <Stack.Screen
+          name="signup"
+          options={{
+            headerShown: true,
             title: 'Join',
             headerStyle: {
               backgroundColor: '#fff',
             },
             headerTintColor: '#000',
-          }} 
+          }}
         />
-        
+
         {/* Protected Routes */}
-        <Stack.Screen 
-          name="home" 
-          options={{ 
-            headerShown: true, 
+        <Stack.Screen
+          name="home"
+          options={{
+            headerShown: true,
             title: 'Home',
             headerStyle: {
               backgroundColor: '#fff',
             },
             headerTintColor: '#000',
-          }} 
+          }}
         />
+
+        {/* Admin Routes */}
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
@@ -75,6 +86,8 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loaded) {

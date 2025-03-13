@@ -67,7 +67,7 @@ exports.loginUser = async (req, res) => {
     );
 
     if (userCheck.rows.length === 0) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = userCheck.rows[0];
@@ -89,22 +89,16 @@ exports.loginUser = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Prepare response data
-    const responseData = {
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        user_type: user.user_type
-      },
-      token
-    };
+    // Remove sensitive data
+    delete user.password_hash;
 
     console.log('Login successful for:', email);
-    console.log('Login response data:', responseData);
 
     // Return user info and token
-    res.json(responseData);
+    res.json({
+      token,
+      user
+    });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error during login' });
