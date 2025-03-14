@@ -42,7 +42,7 @@ export default function useTasks(options: UseTasksOptions = {}) {
           id: task.id,
           title: task.title,
           description: task.description,
-          location: task.location || 'Unknown location',
+          location: task.postal_code || 'Unknown location',
           // Support both reward and payment properties for compatibility
           reward: task.reward || task.payment || 0,
           payment: task.payment || task.reward || 0,

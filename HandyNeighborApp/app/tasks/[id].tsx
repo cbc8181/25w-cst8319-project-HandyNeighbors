@@ -38,10 +38,10 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 
 // 任务状态中文名称
 const STATUS_LABELS: Record<TaskStatus, string> = {
-  open: '待接单',
-  assigned: '进行中',
-  completed: '已完成',
-  cancelled: '已取消'
+  open: 'open',
+  assigned: 'assigned',
+  completed: 'completed',
+  cancelled: 'cancelled',
 };
 
 export default function TaskDetailScreen() {
@@ -101,6 +101,19 @@ export default function TaskDetailScreen() {
     }
   };
 
+  const acceptTask = async () => {
+    try {
+      setUpdating(true);
+      await apiClient.put(`/tasks/${id}/status`, { status: 'assigned', helper_id: user?.id });
+      Alert.alert('Success', 'You have accepted the task!');
+      fetchTaskDetails(); // 重新获取任务详情
+    } catch (err) {
+      Alert.alert('Error', 'Failed to accept the task');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   // 确认更新状态
   const confirmStatusUpdate = (newStatus: TaskStatus) => {
     Alert.alert(
@@ -155,7 +168,7 @@ export default function TaskDetailScreen() {
   // 确定用户可以执行的操作
   const canCancel = isCreator && ['open', 'assigned'].includes(task.status);
   const canComplete = isHelper && task.status === 'assigned';
-
+  const canAccept = !isCreator && task.status === 'open' && !task.helper_id; // 只有非创建者才能接受任务
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -253,6 +266,20 @@ export default function TaskDetailScreen() {
             )}
           </View>
         )}
+        {/* 任务操作：接受任务 */}
+        {canAccept && (
+            <TouchableOpacity style={styles.acceptButton} onPress={acceptTask} disabled={updating}>
+              {updating ? (
+                  <ActivityIndicator color="#FFF" />
+              ) : (
+                  <>
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#FFF" />
+                    <ThemedText style={styles.buttonText}>Accept Task</ThemedText>
+                  </>
+              )}
+            </TouchableOpacity>
+        )}
+
       </ScrollView>
     </ThemedView>
   );
@@ -376,6 +403,13 @@ const styles = StyleSheet.create({
   completeButton: {
     backgroundColor: '#4CAF50',
   },
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center' },
   actionButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
