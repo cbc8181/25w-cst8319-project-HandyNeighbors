@@ -8,9 +8,9 @@ const getBaseUrl = () => {
       return 'http://10.0.2.2:3000';
     } else if (Platform.OS === 'ios') {
       // For iOS devices, use your computer's IP address
-      return 'http://192.168.68.50:3000';
+      return 'http://192.168.2.85:3000';
     } else {
-      // Web - use localhost 
+      // Web - use localhost
       return 'http://localhost:3000';
     }
   }
