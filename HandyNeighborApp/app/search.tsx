@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,13 +15,20 @@ import TaskCard from '@/components/TaskCard';
 import { useAuth } from '@/contexts/AuthContext';
 import useTasks from '@/hooks/useTasks';
 import { router } from 'expo-router';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function SearchScreen() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const { loading, tasks, filteredTasks, fetchTasks } = useTasks({
-    initialSearchTerm: searchTerm
+    initialSearchTerm: searchTerm,
   });
+
+  const background = useThemeColor({}, 'background');
+  const text = useThemeColor({}, 'text');
+  const card = useThemeColor({}, 'card');
+  const icon = useThemeColor({}, 'icon');
+  const border = useThemeColor({}, 'border');
 
   const handleSearch = (text: string) => {
     setSearchTerm(text);
@@ -25,72 +39,75 @@ export default function SearchScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Search Tasks</ThemedText>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for tasks, location, or category..."
-            value={searchTerm}
-            onChangeText={handleSearch}
-            placeholderTextColor="#999"
-            autoFocus
-          />
-          {searchTerm.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchTerm('')}>
-              <Ionicons name="close-circle" size={20} color="#666" />
-            </TouchableOpacity>
+      <ThemedView style={[styles.container, { backgroundColor: background }]}>
+        <View style={[styles.header, { backgroundColor: card }]}>
+          <ThemedText style={[styles.title, { color: text }]}>Search Tasks</ThemedText>
+          <View style={[styles.searchContainer, { backgroundColor: border }]}>
+            <Ionicons name="search" size={20} color={icon} style={styles.searchIcon} />
+            <TextInput
+                style={[styles.searchInput, { color: text }]}
+                placeholder="Search for tasks, location, or category..."
+                placeholderTextColor={icon}
+                value={searchTerm}
+                onChangeText={handleSearch}
+                autoFocus
+            />
+            {searchTerm.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchTerm('')}>
+                  <Ionicons name="close-circle" size={20} color={icon} />
+                </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.resultsContainer}>
+          {loading ? (
+              <ActivityIndicator size="large" color={icon} style={styles.loader} />
+          ) : filteredTasks.length > 0 ? (
+              <FlatList
+                  data={filteredTasks}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                      <TaskCard task={item} onPress={() => handleTaskPress(item.id)} />
+                  )}
+                  contentContainerStyle={styles.resultsList}
+                  showsVerticalScrollIndicator={false}
+              />
+          ) : searchTerm ? (
+              <View style={styles.emptyStateContainer}>
+                <Ionicons name="search-outline" size={48} color={icon} />
+                <ThemedText style={[styles.noResultsText, { color: text }]}>
+                  No tasks found for "{searchTerm}"
+                </ThemedText>
+                <ThemedText style={[styles.suggestionsText, { color: icon }]}>
+                  Try searching with different keywords or categories.
+                </ThemedText>
+              </View>
+          ) : (
+              <View style={styles.emptyStateContainer}>
+                <Ionicons name="search-outline" size={48} color={icon} />
+                <ThemedText style={[styles.noResultsText, { color: text }]}>
+                  Enter a search term
+                </ThemedText>
+                <ThemedText style={[styles.suggestionsText, { color: icon }]}>
+                  Find tasks by location, category, or keywords.
+                </ThemedText>
+              </View>
           )}
         </View>
-      </View>
 
-      <View style={styles.resultsContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#000" style={styles.loader} />
-        ) : filteredTasks.length > 0 ? (
-          <FlatList
-            data={filteredTasks}
-            keyExtractor={item => item.id.toString()}
-            renderItem={({ item }) => (
-              <TaskCard
-                task={item}
-                onPress={() => handleTaskPress(item.id)}
-              />
-            )}
-            contentContainerStyle={styles.resultsList}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : searchTerm ? (
-          <View style={styles.emptyStateContainer}>
-            <Ionicons name="search-outline" size={48} color="#ccc" />
-            <ThemedText style={styles.noResultsText}>No tasks found for "{searchTerm}"</ThemedText>
-            <ThemedText style={styles.suggestionsText}>Try searching with different keywords or categories.</ThemedText>
-          </View>
-        ) : (
-          <View style={styles.emptyStateContainer}>
-            <Ionicons name="search-outline" size={48} color="#ccc" />
-            <ThemedText style={styles.noResultsText}>Enter a search term</ThemedText>
-            <ThemedText style={styles.suggestionsText}>Find tasks by location, category, or keywords.</ThemedText>
-          </View>
-        )}
-      </View>
-
-      <BottomNavigation />
-    </ThemedView>
+        <BottomNavigation />
+      </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
   },
   header: {
     padding: 20,
     paddingTop: 40,
-    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 22,
@@ -100,7 +117,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F2F2',
     borderRadius: 25,
     paddingHorizontal: 15,
     height: 50,
@@ -112,7 +128,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color: '#333',
   },
   resultsContainer: {
     flex: 1,
@@ -138,8 +153,7 @@ const styles = StyleSheet.create({
   },
   suggestionsText: {
     fontSize: 16,
-    color: '#666',
     marginTop: 10,
     textAlign: 'center',
   },
-}); 
+});

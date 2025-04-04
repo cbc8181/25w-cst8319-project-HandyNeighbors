@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, View, StyleSheet, Alert, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { ThemedTextInput } from '../components/ThemedTextInput';
 import { ThemedText } from '../components/ThemedText';
 import { ThemedButton } from '../components/ThemedButton';
@@ -7,13 +14,15 @@ import { ThemedView } from '../components/ThemedView';
 import { router } from 'expo-router';
 import axios from 'axios';
 import { API_PREFIX, AUTH_ENDPOINTS } from '../config/api';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { Colors } from '@/constants/Colors';
 
-// 创建API客户端
-const apiClient = axios.create({
-  baseURL: API_PREFIX,
-});
+const apiClient = axios.create({ baseURL: API_PREFIX });
 
 export default function SignUp() {
+  const { resolvedTheme } = useThemeContext();
+  const themeColors = Colors[resolvedTheme];
+  const isDark = resolvedTheme === 'dark';
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +38,6 @@ export default function SignUp() {
     setError('');
     setIsLoading(true);
 
-    // 表单验证
     if (!fullName || !email || !password) {
       setError('Please fill in all required fields');
       setIsLoading(false);
@@ -48,176 +56,160 @@ export default function SignUp() {
       return;
     }
 
-    // 创建注册数据
     const userData = {
       full_name: fullName,
-      email: email,
-      password: password,
+      email,
+      password,
       user_type: userType,
       postal_code: postalCode,
       ...(userType === 'student' && { student_id: studentId }),
     };
 
     try {
-      // 通过API发送注册请求
       const response = await apiClient.post(AUTH_ENDPOINTS.register, userData);
-
       console.log('Registration response:', response.data);
       setRegistrationSuccess(true);
-
-      // 显示成功消息
-      Alert.alert(
-        'Registration Successful',
-        'Your account has been created. Please log in.',
-        [{ text: 'OK', onPress: () => router.replace('/signin') }]
-      );
+      Alert.alert('Registration Successful', 'Your account has been created. Please log in.', [
+        { text: 'OK', onPress: () => router.replace('/signin') },
+      ]);
     } catch (error: any) {
       console.error('Registration error:', error);
-
-      // 获取API错误消息
-      const errorMessage = error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Registration failed. Please try again.';
+      const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Registration failed. Please try again.';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 当注册成功时自动导航到登录页面
   React.useEffect(() => {
     if (registrationSuccess) {
       const timer = setTimeout(() => {
         router.replace('/signin');
       }, 2000);
-
       return () => clearTimeout(timer);
     }
   }, [registrationSuccess]);
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.title}>Sign Up</ThemedText>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ThemedView style={styles.container}>
+          <ThemedText style={styles.title}>Sign Up</ThemedText>
 
-        <View style={styles.inputContainer}>
-          <ThemedText style={styles.inputLabel}>Full Name *</ThemedText>
-          <ThemedTextInput
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Full Name"
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <ThemedText style={styles.inputLabel}>Email *</ThemedText>
-          <ThemedTextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <ThemedText style={styles.inputLabel}>Password *</ThemedText>
-          <ThemedTextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Password"
-            secureTextEntry
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <ThemedText style={styles.inputLabel}>Confirm Password *</ThemedText>
-          <ThemedTextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Confirm Password"
-            secureTextEntry
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <ThemedText style={styles.inputLabel}>Postal Code</ThemedText>
-          <ThemedTextInput
-            value={postalCode}
-            onChangeText={setPostalCode}
-            placeholder="Postal Code"
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.userTypeContainer}>
-          <ThemedText style={styles.userTypeLabel}>User Type *</ThemedText>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[
-                styles.userTypeButton,
-                userType === 'student' && styles.selectedUserType
-              ]}
-              onPress={() => setUserType('student')}
-            >
-              <ThemedText
-                style={[
-                  styles.userTypeButtonText,
-                  userType === 'student' && styles.selectedUserTypeText
-                ]}
-              >
-                Student
-              </ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.userTypeButton,
-                userType === 'community' && styles.selectedUserType
-              ]}
-              onPress={() => setUserType('community')}
-            >
-              <ThemedText
-                style={[
-                  styles.userTypeButtonText,
-                  userType === 'community' && styles.selectedUserTypeText
-                ]}
-              >
-                Community
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {userType === 'student' && (
           <View style={styles.inputContainer}>
-            <ThemedText style={styles.inputLabel}>Student ID *</ThemedText>
+            <ThemedText style={styles.inputLabel}>Full Name *</ThemedText>
+            <ThemedTextInput value={fullName} onChangeText={setFullName} placeholder="Full Name" />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <ThemedText style={styles.inputLabel}>Email *</ThemedText>
             <ThemedTextInput
-              value={studentId}
-              onChangeText={setStudentId}
-              placeholder="Student ID"
-              style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Email"
+                keyboardType="email-address"
+                autoCapitalize="none"
             />
           </View>
-        )}
 
-        {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
+          <View style={styles.inputContainer}>
+            <ThemedText style={styles.inputLabel}>Password *</ThemedText>
+            <ThemedTextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                secureTextEntry
+            />
+          </View>
 
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#0a7ea4" />
-        ) : (
-          <ThemedButton title="Sign Up" onPress={handleSignUp} style={styles.button} />
-        )}
+          <View style={styles.inputContainer}>
+            <ThemedText style={styles.inputLabel}>Confirm Password *</ThemedText>
+            <ThemedTextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm Password"
+                secureTextEntry
+            />
+          </View>
 
-        <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-          <ThemedText style={styles.backText}>Return to previous page</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
-    </ScrollView>
+          <View style={styles.inputContainer}>
+            <ThemedText style={styles.inputLabel}>Postal Code</ThemedText>
+            <ThemedTextInput value={postalCode} onChangeText={setPostalCode} placeholder="Postal Code" />
+          </View>
+
+          <View style={styles.userTypeContainer}>
+            <ThemedText style={styles.userTypeLabel}>User Type *</ThemedText>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                  style={[
+                    styles.userTypeButton,
+                    {
+                      borderColor: isDark ? '#555' : '#CCC',
+                      backgroundColor: userType === 'student' ? '#0a7ea4' : 'transparent'
+                    },
+                  ]}
+                  onPress={() => setUserType('student')}
+              >
+                <ThemedText
+                    style={{
+                      color: userType === 'student' ? '#FFF' : isDark ? '#ECEDEE' : '#111',
+                      fontWeight: '500',
+                    }}
+                >
+                  Student
+                </ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                  style={[
+                    styles.userTypeButton,
+                    {
+                      borderColor: isDark ? '#555' : '#CCC',
+                      backgroundColor: userType === 'community' ? '#0a7ea4' : 'transparent'
+                    },
+                  ]}
+                  onPress={() => setUserType('community')}
+              >
+                <ThemedText
+                    style={{
+                      color: userType === 'community' ? '#FFF' : isDark ? '#ECEDEE' : '#111',
+                      fontWeight: '500',
+                    }}
+                >
+                  Community
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {userType === 'student' && (
+              <View style={styles.inputContainer}>
+                <ThemedText style={styles.inputLabel}>Student ID *</ThemedText>
+                <ThemedTextInput
+                    value={studentId}
+                    onChangeText={setStudentId}
+                    placeholder="Student ID"
+                />
+              </View>
+          )}
+
+          {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
+
+          {isLoading ? (
+              <ActivityIndicator size="large" color={themeColors.tint} />
+          ) : (
+              <ThemedButton title="Sign Up" onPress={handleSignUp} style={styles.button} />
+          )}
+
+          <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
+            <ThemedText style={{ color: themeColors.link, fontSize: 16 }}>
+              Return to previous page
+            </ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </ScrollView>
   );
 }
 
@@ -242,9 +234,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
   },
-  input: {
-    marginBottom: 5,
-  },
   userTypeContainer: {
     marginVertical: 15,
   },
@@ -260,20 +249,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#CCCCCC',
     alignItems: 'center',
     borderRadius: 5,
     marginHorizontal: 5,
-  },
-  selectedUserType: {
-    backgroundColor: '#0a7ea4',
-    borderColor: '#0a7ea4',
-  },
-  userTypeButtonText: {
-    color: '#11181C',
-  },
-  selectedUserTypeText: {
-    color: 'white',
   },
   errorText: {
     color: 'red',
@@ -286,8 +264,4 @@ const styles = StyleSheet.create({
     marginTop: 15,
     alignItems: 'center',
   },
-  backText: {
-    color: '#0a7ea4',
-    fontSize: 16,
-  },
-}); 
+});
