@@ -419,4 +419,10 @@ const styles = StyleSheet.create({
   updatingIndicator: {
     marginTop: 8,
   },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
 }); 

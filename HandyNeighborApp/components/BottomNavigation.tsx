@@ -3,11 +3,11 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
-
+type NavPath = '/home' | '/tasks/manage' | '/search' | '/settings';
 interface NavItem {
   name: string;
   icon: string;
-  path: string;
+  path: NavPath;
 }
 
 const navItems: NavItem[] = [
@@ -20,7 +20,7 @@ const navItems: NavItem[] = [
 export default function BottomNavigation() {
   const currentPath = usePathname();
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: NavPath) => {
     router.push(path);
   };
 
