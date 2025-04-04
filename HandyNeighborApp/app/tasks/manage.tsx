@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import TaskCard from '@/components/TaskCard';
 import { router } from 'expo-router';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import BottomNavigation from '@/components/BottomNavigation'
 
 interface Task {
   id: number;
@@ -186,6 +187,7 @@ export default function TaskManagementScreen() {
         ) : (
             <View style={styles.content}>{activeTab === 'created' ? renderTaskList(createdTasks) : renderTaskList(assignedTasks)}</View>
         )}
+        <BottomNavigation />
       </ThemedView>
   );
 }
