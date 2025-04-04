@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { apiClient } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 const categories = [
   { id: '', label: 'Select a category' },
@@ -30,6 +30,12 @@ export default function CreateTaskScreen() {
   });
 
   const [showCategories, setShowCategories] = useState(false);
+
+  const background = useThemeColor({}, 'background');
+  const card = useThemeColor({}, 'card');
+  const text = useThemeColor({}, 'text');
+  const border = useThemeColor({}, 'icon'); // fallback for border color
+  const tint = useThemeColor({}, 'tint');
 
   const selectCategory = (categoryId: string) => {
     setTaskData({ ...taskData, category: categoryId });
@@ -57,12 +63,9 @@ export default function CreateTaskScreen() {
         category: taskData.category
       };
 
-      console.log('Sending task data:', JSON.stringify(requestData, null, 2));
-
       const { data, error } = await apiClient.post('/tasks', requestData);
 
       if (error) {
-        console.error('Create task error:', error);
         Alert.alert('Error', error.toString());
         return;
       }
@@ -72,88 +75,87 @@ export default function CreateTaskScreen() {
       }
 
     } catch (error: any) {
-      console.error('Create task error:', error);
-      console.error('Error details:', error.message);
       Alert.alert('Error', `Failed to create task: ${error.message}`);
     }
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Task Title"
-          value={taskData.title}
-          onChangeText={(text) => setTaskData({ ...taskData, title: text })}
-          maxLength={255}
-        />
+      <ThemedView style={[styles.container, { backgroundColor: background }]}>
+        <ScrollView style={styles.form}>
+          <TextInput
+              style={[styles.input, { backgroundColor: card, borderColor: border, color: text }]}
+              placeholder="Task Title"
+              placeholderTextColor={border}
+              value={taskData.title}
+              onChangeText={(text) => setTaskData({ ...taskData, title: text })}
+              maxLength={255}
+          />
 
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Task Description"
-          multiline
-          numberOfLines={4}
-          value={taskData.description}
-          onChangeText={(text) => setTaskData({ ...taskData, description: text })}
-        />
+          <TextInput
+              style={[styles.input, styles.textArea, { backgroundColor: card, borderColor: border, color: text }]}
+              placeholder="Task Description"
+              placeholderTextColor={border}
+              multiline
+              numberOfLines={4}
+              value={taskData.description}
+              onChangeText={(text) => setTaskData({ ...taskData, description: text })}
+          />
 
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => setShowCategories(!showCategories)}
-        >
-          <ThemedText>
-            {taskData.category ?
-              categories.find(c => c.id === taskData.category)?.label :
-              'Select a category'}
-          </ThemedText>
-        </TouchableOpacity>
+          <TouchableOpacity
+              style={[styles.input, { backgroundColor: card, borderColor: border }]}
+              onPress={() => setShowCategories(!showCategories)}
+          >
+            <ThemedText style={{ color: taskData.category ? text : border }}>
+              {taskData.category ? categories.find(c => c.id === taskData.category)?.label : 'Select a category'}
+            </ThemedText>
+          </TouchableOpacity>
 
-        {showCategories && (
-          <View style={styles.dropdownList}>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                style={styles.dropdownItem}
-                onPress={() => selectCategory(category.id)}
-              >
-                <ThemedText>{category.label}</ThemedText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+          {showCategories && (
+              <View style={[styles.dropdownList, { backgroundColor: card, borderColor: border }]}>
+                {categories.map((category) => (
+                    <TouchableOpacity
+                        key={category.id}
+                        style={styles.dropdownItem}
+                        onPress={() => selectCategory(category.id)}
+                    >
+                      <ThemedText style={{ color: text }}>{category.label}</ThemedText>
+                    </TouchableOpacity>
+                ))}
+              </View>
+          )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Postal Code"
-          value={taskData.postal_code}
-          onChangeText={(text) => setTaskData({ ...taskData, postal_code: text })}
-          maxLength={10}
-        />
+          <TextInput
+              style={[styles.input, { backgroundColor: card, borderColor: border, color: text }]}
+              placeholder="Postal Code"
+              placeholderTextColor={border}
+              value={taskData.postal_code}
+              onChangeText={(text) => setTaskData({ ...taskData, postal_code: text })}
+              maxLength={10}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Budget"
-          keyboardType="decimal-pad"
-          value={taskData.budget}
-          onChangeText={(text) => setTaskData({ ...taskData, budget: text })}
-        />
+          <TextInput
+              style={[styles.input, { backgroundColor: card, borderColor: border, color: text }]}
+              placeholder="Budget"
+              placeholderTextColor={border}
+              keyboardType="decimal-pad"
+              value={taskData.budget}
+              onChangeText={(text) => setTaskData({ ...taskData, budget: text })}
+          />
 
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={handleCreateTask}
-        >
-          <ThemedText style={styles.buttonText}>Create Task</ThemedText>
-        </TouchableOpacity>
-      </ScrollView>
-    </ThemedView>
+          <TouchableOpacity
+              style={[styles.createButton, { backgroundColor: '#4CAF50' }]}
+              onPress={handleCreateTask}
+          >
+            <ThemedText style={[styles.buttonText, { color: '#FFFFFF' }]}>Create Task</ThemedText>
+          </TouchableOpacity>
+        </ScrollView>
+      </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
   },
   form: {
     padding: 20,
@@ -161,12 +163,10 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 8,
     marginBottom: 16,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
   },
   textArea: {
@@ -175,9 +175,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   dropdownList: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 8,
     marginTop: -12,
     marginBottom: 16,
@@ -185,10 +183,8 @@ const styles = StyleSheet.create({
   dropdownItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
   },
   createButton: {
-    backgroundColor: '#4CAF50',
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',

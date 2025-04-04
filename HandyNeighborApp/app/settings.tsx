@@ -89,7 +89,7 @@ export default function SettingsScreen() {
                 'Use dark theme throughout the app',
                 <Switch
                     value={preference !== 'light'}
-                    onValueChange={(enabled) => setPreference(enabled ? 'system' : 'light')}
+                    onValueChange={(enabled) => setPreference(enabled ? 'dark' : 'light')}
                     trackColor={{ false: '#767577', true: '#4CAF50' }}
                     thumbColor="#fff"
                 />
