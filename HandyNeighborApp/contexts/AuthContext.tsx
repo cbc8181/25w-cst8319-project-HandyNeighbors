@@ -10,6 +10,8 @@ interface User {
   user_type: string;
   postal_code?: string;
   student_id?: string;
+  avatar_url?: string;
+  description?: string;
   [key: string]: any; // 允许额外的字段
 }
 
@@ -20,6 +22,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -104,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout,setUser }}>
       {children}
     </AuthContext.Provider>
   );

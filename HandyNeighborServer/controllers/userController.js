@@ -109,3 +109,30 @@ exports.loginUser = async (req, res) => {
 exports.verifySession = async (req, res) => {
   res.json({ user: req.user });
 };
+
+exports.uploadAvatar = (req, res) => {
+  const userId = req.params.id;
+  const file = req.file;
+
+  if (!file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const avatarUrl = `/uploads/${file.filename}`; // or your own file.path logic
+
+  // 更新数据库
+  const sql = 'UPDATE users SET avatar_url = ? WHERE id = ?';
+  db.query(sql, [avatarUrl, userId], (err, result) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    return res.json({ avatar_url: avatarUrl });
+  });
+};
+
+exports.updateDescription = (req, res) => {
+  const userId = req.params.id;
+  const { description } = req.body;
+
+  const sql = 'UPDATE users SET description = ? WHERE id = ?';
+  db.query(sql, [description, userId], (err, result) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    return res.json({ success: true });
+  });
+};

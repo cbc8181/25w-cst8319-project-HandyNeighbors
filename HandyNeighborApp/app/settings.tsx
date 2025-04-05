@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Switch, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Switch, ScrollView,Image } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import BottomNavigation from '@/components/BottomNavigation';
@@ -8,6 +8,8 @@ import { router } from 'expo-router';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from '@expo/vector-icons';
+import { API_PREFIX } from '../config/api';
+
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
@@ -52,14 +54,40 @@ export default function SettingsScreen() {
         <ScrollView style={styles.settingsContainer}>
           {/* User Profile Section */}
           <View style={[styles.profileSection, { backgroundColor: card }]}>
-            <View style={styles.avatarContainer}>
-              <ThemedText style={styles.avatarText}>{user?.full_name?.charAt(0) || 'U'}</ThemedText>
-            </View>
+            {user?.avatar_url ? (
+                <Image
+                    source={{ uri: `${API_PREFIX.replace('/api', '')}${user.avatar_url}` }}
+                    // 替换为你实际部署地址
+                    style={styles.avatarImage}
+                />
+            ) : (
+                <View style={styles.avatarContainer}>
+                  <ThemedText style={styles.avatarText}>{user?.full_name?.charAt(0) || 'U'}</ThemedText>
+                </View>
+            )}
+
+            {/* 👤 资料文字部分：姓名、邮箱、简介 */}
             <View style={styles.profileInfo}>
-              <ThemedText style={[styles.profileName, { color: text }]}>{user?.full_name || 'User'}</ThemedText>
-              <ThemedText style={[styles.profileEmail, { color: icon }]}>{user?.email || 'email@example.com'}</ThemedText>
+              <ThemedText style={[styles.profileName, { color: text }]}>
+                {user?.full_name || 'User'}
+              </ThemedText>
+              <ThemedText style={[styles.profileEmail, { color: icon }]}>
+                {user?.email || 'email@example.com'}
+              </ThemedText>
+              {user?.description && (
+                  <ThemedText style={[styles.profileDescription, { color: icon }]}>
+                    {user.description}
+                  </ThemedText>
+              )}
             </View>
-            <TouchableOpacity style={[styles.editProfileButton, { backgroundColor: card }]}>
+
+            {/* ✏️ 编辑按钮 */}
+
+            <TouchableOpacity
+                style={[styles.editProfileButton, { backgroundColor: card }]}
+                onPress={() => router.push('./profile/edit')}
+
+            >
               <ThemedText style={[styles.editProfileText, { color: text }]}>Edit</ThemedText>
             </TouchableOpacity>
           </View>
@@ -255,4 +283,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  avatarImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 10,
+  },
+  profileDescription: {
+    fontSize: 14,
+    marginTop: 5,
+  },
+
 });
