@@ -1,158 +1,187 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Switch, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Switch, ScrollView,Image } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from '@/components/BottomNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Ionicons } from '@expo/vector-icons';
+import { API_PREFIX } from '../config/api';
+
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
+  const { preference, setPreference } = useThemeContext();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
+
+  // 🎨 动态颜色
+  const background = useThemeColor({}, 'background');
+  const card = useThemeColor({}, 'card');
+  const text = useThemeColor({}, 'text');
+  const icon = useThemeColor({}, 'icon');
 
   const handleLogout = async () => {
     await logout();
   };
 
   const renderSettingItem = (
-    icon: string,
-    title: string,
-    description: string,
-    action: React.ReactNode
+      iconName: string,
+      title: string,
+      description: string,
+      action: React.ReactNode
   ) => (
-    <View style={styles.settingItem}>
-      <View style={styles.settingIconContainer}>
-        <Ionicons name={icon as any} size={24} color="#555" />
+      <View style={[styles.settingItem]}>
+        <View style={[styles.settingIconContainer, { backgroundColor: card }]}>
+          <Ionicons name={iconName as any} size={24} color={icon} />
+        </View>
+        <View style={styles.settingContent}>
+          <ThemedText style={[styles.settingTitle, { color: text }]}>{title}</ThemedText>
+          <ThemedText style={[styles.settingDescription, { color: icon }]}>{description}</ThemedText>
+        </View>
+        {action}
       </View>
-      <View style={styles.settingContent}>
-        <ThemedText style={styles.settingTitle}>{title}</ThemedText>
-        <ThemedText style={styles.settingDescription}>{description}</ThemedText>
-      </View>
-      {action}
-    </View>
   );
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Settings</ThemedText>
-      </View>
+      <ThemedView style={[styles.container, { backgroundColor: background  }]}>
+        <View style={[styles.header, { backgroundColor: card }]}>
+          <ThemedText style={[styles.title, { color: text }]}>Settings</ThemedText>
+        </View>
 
-      <ScrollView style={styles.settingsContainer}>
-        {/* User Profile Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <ThemedText style={styles.avatarText}>{user?.full_name?.charAt(0) || 'U'}</ThemedText>
+        <ScrollView style={styles.settingsContainer}>
+          {/* User Profile Section */}
+          <View style={[styles.profileSection, { backgroundColor: card }]}>
+            {user?.avatar_url ? (
+                <Image
+                    source={{ uri: `${API_PREFIX.replace('/api', '')}${user.avatar_url}` }}
+                    // 替换为你实际部署地址
+                    style={styles.avatarImage}
+                />
+            ) : (
+                <View style={styles.avatarContainer}>
+                  <ThemedText style={styles.avatarText}>{user?.full_name?.charAt(0) || 'U'}</ThemedText>
+                </View>
+            )}
+
+            {/* 👤 资料文字部分：姓名、邮箱、简介 */}
+            <View style={styles.profileInfo}>
+              <ThemedText style={[styles.profileName, { color: text }]}>
+                {user?.full_name || 'User'}
+              </ThemedText>
+              <ThemedText style={[styles.profileEmail, { color: icon }]}>
+                {user?.email || 'email@example.com'}
+              </ThemedText>
+              {user?.description && (
+                  <ThemedText style={[styles.profileDescription, { color: icon }]}>
+                    {user.description}
+                  </ThemedText>
+              )}
+            </View>
+
+            {/* ✏️ 编辑按钮 */}
+
+            <TouchableOpacity
+                style={[styles.editProfileButton, { backgroundColor: card }]}
+                onPress={() => router.push('./profile/edit')}
+
+            >
+              <ThemedText style={[styles.editProfileText, { color: text }]}>Edit</ThemedText>
+            </TouchableOpacity>
           </View>
-          <View style={styles.profileInfo}>
-            <ThemedText style={styles.profileName}>{user?.full_name || 'User'}</ThemedText>
-            <ThemedText style={styles.profileEmail}>{user?.email || 'email@example.com'}</ThemedText>
+
+          {/* Notifications Section */}
+          <View style={[styles.section, { backgroundColor: card }]}>
+            <ThemedText style={[styles.sectionTitle, { color: text }]}>Notifications</ThemedText>
+            {renderSettingItem(
+                'notifications',
+                'Push Notifications',
+                'Receive notifications for new tasks and updates',
+                <Switch
+                    value={notificationsEnabled}
+                    onValueChange={setNotificationsEnabled}
+                    trackColor={{ false: '#767577', true: '#4CAF50' }}
+                    thumbColor="#fff"
+                />
+            )}
           </View>
-          <TouchableOpacity style={styles.editProfileButton}>
-            <ThemedText style={styles.editProfileText}>Edit</ThemedText>
+
+          {/* Preferences Section */}
+          <View style={[styles.section, { backgroundColor: card }]}>
+            <ThemedText style={[styles.sectionTitle, { color: text }]}>Preferences</ThemedText>
+            {renderSettingItem(
+                'moon',
+                'Dark Mode',
+                'Use dark theme throughout the app',
+                <Switch
+                    value={preference !== 'light'}
+                    onValueChange={(enabled) => setPreference(enabled ? 'dark' : 'light')}
+                    trackColor={{ false: '#767577', true: '#4CAF50' }}
+                    thumbColor="#fff"
+                />
+            )}
+            {renderSettingItem(
+                'location',
+                'Location Services',
+                'Allow app to access your location',
+                <Switch
+                    value={locationEnabled}
+                    onValueChange={setLocationEnabled}
+                    trackColor={{ false: '#767577', true: '#4CAF50' }}
+                    thumbColor="#fff"
+                />
+            )}
+          </View>
+
+          {/* Account Section */}
+          <View style={[styles.section, { backgroundColor: card }]}>
+            <ThemedText style={[styles.sectionTitle, { color: text }]}>Account</ThemedText>
+            <TouchableOpacity style={styles.accountOption}>
+              <Ionicons name="shield-checkmark" size={24} color={icon} style={styles.accountOptionIcon} />
+              <ThemedText style={[styles.accountOptionText, { color: text }]}>Privacy & Security</ThemedText>
+              <Ionicons name="chevron-forward" size={20} color={icon} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.accountOption}>
+              <Ionicons name="help-circle" size={24} color={icon} style={styles.accountOptionIcon} />
+              <ThemedText style={[styles.accountOptionText, { color: text }]}>Help & Support</ThemedText>
+              <Ionicons name="chevron-forward" size={20} color={icon} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.accountOption}>
+              <Ionicons name="information-circle" size={24} color={icon} style={styles.accountOptionIcon} />
+              <ThemedText style={[styles.accountOptionText, { color: text }]}>About</ThemedText>
+              <Ionicons name="chevron-forward" size={20} color={icon} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out" size={20} color="#FFF" style={styles.logoutIcon} />
+            <ThemedText style={styles.logoutText}>Logout</ThemedText>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
-        {/* Notifications Section */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Notifications</ThemedText>
-          {renderSettingItem(
-            'notifications',
-            'Push Notifications',
-            'Receive notifications for new tasks and updates',
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: '#767577', true: '#4CAF50' }}
-              thumbColor="#fff"
-            />
-          )}
-        </View>
-
-        {/* Preferences Section */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
-          {renderSettingItem(
-            'moon',
-            'Dark Mode',
-            'Use dark theme throughout the app',
-            <Switch
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
-              trackColor={{ false: '#767577', true: '#4CAF50' }}
-              thumbColor="#fff"
-            />
-          )}
-          {renderSettingItem(
-            'location',
-            'Location Services',
-            'Allow app to access your location',
-            <Switch
-              value={locationEnabled}
-              onValueChange={setLocationEnabled}
-              trackColor={{ false: '#767577', true: '#4CAF50' }}
-              thumbColor="#fff"
-            />
-          )}
-        </View>
-
-        {/* Account Section */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Account</ThemedText>
-          <TouchableOpacity style={styles.accountOption}>
-            <Ionicons name="shield-checkmark" size={24} color="#555" style={styles.accountOptionIcon} />
-            <ThemedText style={styles.accountOptionText}>Privacy & Security</ThemedText>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.accountOption}>
-            <Ionicons name="help-circle" size={24} color="#555" style={styles.accountOptionIcon} />
-            <ThemedText style={styles.accountOptionText}>Help & Support</ThemedText>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.accountOption}>
-            <Ionicons name="information-circle" size={24} color="#555" style={styles.accountOptionIcon} />
-            <ThemedText style={styles.accountOptionText}>About</ThemedText>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out" size={20} color="#FFF" style={styles.logoutIcon} />
-          <ThemedText style={styles.logoutText}>Logout</ThemedText>
-        </TouchableOpacity>
-      </ScrollView>
-
-      <BottomNavigation />
-    </ThemedView>
+        <BottomNavigation />
+      </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
+  container: { flex: 1 },
   header: {
     padding: 20,
     paddingTop: 40,
-    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
   },
-  settingsContainer: {
-    flex: 1,
-  },
+  settingsContainer: { flex: 1 },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#FFFFFF',
     marginBottom: 10,
   },
   avatarContainer: {
@@ -178,21 +207,17 @@ const styles = StyleSheet.create({
   },
   profileEmail: {
     fontSize: 14,
-    color: '#777',
     marginTop: 5,
   },
   editProfileButton: {
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F1F1F1',
   },
   editProfileText: {
     fontSize: 14,
-    color: '#555',
   },
   section: {
-    backgroundColor: '#FFFFFF',
     marginBottom: 10,
     paddingVertical: 10,
   },
@@ -214,7 +239,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#F1F1F1',
   },
   settingContent: {
     flex: 1,
@@ -226,7 +250,6 @@ const styles = StyleSheet.create({
   },
   settingDescription: {
     fontSize: 14,
-    color: '#777',
     marginTop: 3,
   },
   accountOption: {
@@ -260,4 +283,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-}); 
+  avatarImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 10,
+  },
+  profileDescription: {
+    fontSize: 14,
+    marginTop: 5,
+  },
+
+});

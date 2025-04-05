@@ -6,6 +6,7 @@ const session = require('express-session');
 const cors = require('cors');
 const authMiddleware = require('./middleware/auth');
 const dotenv = require('dotenv');
+const userRoutes = require('./routes/users');
 
 // Load environment variables
 dotenv.config();
@@ -52,5 +53,8 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
+app.use('/avatars', express.static(path.join(__dirname, 'public/avatars')));
+
+app.use('/api/users', userRoutes);
 
 module.exports = app;

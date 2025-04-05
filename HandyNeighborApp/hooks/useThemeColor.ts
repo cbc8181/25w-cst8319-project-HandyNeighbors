@@ -1,21 +1,16 @@
-/**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
- */
-
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useThemeContext } from '@/contexts/ThemeContext'; // ✅ 从 ThemeContext 获取 theme
 
 export function useThemeColor(
-  props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
-) {
-  const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+    props: { light?: string; dark?: string },
+    colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+): string {
+  const { resolvedTheme } = useThemeContext(); // ✅ 来自上下文，不是系统
+  const colorFromProps = props[resolvedTheme];
 
   if (colorFromProps) {
     return colorFromProps;
   } else {
-    return Colors[theme][colorName];
+    return Colors[resolvedTheme][colorName];
   }
 }
